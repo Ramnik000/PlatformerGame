@@ -142,6 +142,9 @@ class World():
                     img_rect.y = row_count * tile_size
                     tile = (img, img_rect)
                     self.tile_list.append(tile)
+                if tile == 3:
+                    blob = Enemy(col_count * tile_size, row_count* tile_size + 15)
+                    blob_group.add(blob)
                 col_count += 1
             row_count += 1
     
@@ -150,11 +153,28 @@ class World():
             screen.blit(tile[0], tile[1])
             pygame.draw.rect(screen, (255, 255, 255), tile[1], 2)
 
+class Enemy(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        pygame.sprite.Sprite.__init__(self) #Enemy class is child of sprite class
+        self.image = pygame.image.load('img/blob.png')
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+        self.move_direction =1
+        self.move_counter = 0
+
+    def update(self):
+        self.rect.x += self.move_direction #postive moves to right
+        self.move_counter +=1
+        if abs(self.move_counter) > 50:
+            self.move_direction *= -1
+            self.move_counter *= -1
+   
 world_data = [
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], 
     [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1], 
     [1, 0, 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 8, 1], 
-    [1, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 7, 0, 2, 2, 1], 
+    [1, 0, 0, 0, 0, 2, 0, 0, 0, 0, 3, 7, 0, 2, 2, 1], 
     [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 7, 0, 1], 
     [1, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 2, 2, 0, 1], 
     [1, 7, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 1], 
@@ -162,14 +182,15 @@ world_data = [
     [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 0, 0, 7, 1], 
     [1, 0, 2, 0, 0, 7, 0, 7, 0, 0, 0, 0, 0, 0, 0, 1], 
     [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1], 
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 2, 0, 2, 1], 
+    [1, 0, 0, 0, 0, 0, 0, 3, 0, 0, 2, 0, 2, 0, 2, 1], 
     [1, 0, 0, 0, 0, 0, 2, 2, 2, 6, 6, 6, 6, 6, 1, 1], 
     [1, 0, 0, 0, 0, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], 
     [1, 0, 0, 0, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], 
     [1, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 ]
 
-player = Player(50, screen_height - tile_size * 2)  
+player = Player(50, screen_height - tile_size * 2)
+blob_group =  pygame.sprite.Group()
 world = World(world_data)
 
 run = True
@@ -178,6 +199,8 @@ while run:
     screen.blit(bg_image, (0, 0))
 
     world.draw()
+    blob_group.update()
+    blob_group.draw(screen)
     player.update()
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
