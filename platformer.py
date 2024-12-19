@@ -14,9 +14,12 @@ pygame.display.set_caption("PlatformerGame")
 # defining game variables
 tile_size = 50
 game_over = 0
+main_menu = True
 
 bg_image = pygame.image.load('img/sky.png')
 restart_img = pygame.image.load('img/restart_btn.png')
+start_img = pygame.image.load('img/start_btn.png')
+exit_img = pygame.image.load('img/exit_btn.png')
 
 class Button():
     def __init__(self, x, y, image):
@@ -55,7 +58,7 @@ class Player():
         if game_over == 0:
             #get keypresses
             key = pygame.key.get_pressed()
-            if key[pygame.K_SPACE] and self.jumped == False:
+            if key[pygame.K_SPACE] and self.jumped == False and self.in_air == False:
                 self.vel_y = -15
                 self.jumped = True
             if key[pygame.K_SPACE] == False:
@@ -97,6 +100,7 @@ class Player():
             dy += self.vel_y
 
             #Check the collisons 
+            self.in_air = True
             for tile in world.tile_list:
                 #check for collision in x direction
                 if tile[1].colliderect(self.rect.x + dx , self.rect.y, self.width, self.height):
@@ -112,6 +116,7 @@ class Player():
                     elif self.vel_y >= 0:
                         dy = tile[1].top - self.rect.bottom
                         self.vel_y = 0
+                        self.in_air = False
             #check for collision with enemies
             if pygame.sprite.spritecollide(self, blob_group, False):
                 game_over = -1 #when player die
@@ -155,7 +160,7 @@ class Player():
         self.vel_y = 0 #jump
         self.jumped = False
         self.direction = 0
-
+        self.in_air = True
 
 class World():
     def __init__(self, data):
@@ -248,31 +253,45 @@ world = World(world_data)
 
 #crete button
 restart_button = Button(screen_width // 2 - 50, screen_height //2 + 100, restart_img)
+start_button = Button(screen_width // 2 -250, screen_height // 2 , start_img)
+exit_button = Button(screen_width // 2 + 100, screen_height // 2 , exit_img)
+
 run = True
 while run:
     clock.tick(fps)
-    screen.blit(bg_image, (0, 0))
 
-    world.draw()
-
-    if game_over == 0:
-        blob_group.update()
-
-    blob_group.draw(screen)
-    lava_group.draw(screen)
-
-    game_over = player.update(game_over)
-
-    #if player has die
-    if game_over == -1:
-       if restart_button.draw():
-        player.reset(50, screen_height - tile_size * 2)
-        game_over = 0
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run = False
 
-    # Display images
+    screen.blit(bg_image, (0, 0))
+
+    if main_menu:
+        if exit_button.draw():
+            run = False
+        if start_button.draw():
+            main_menu = False
+    else:
+        # Draw the game world
+        world.draw()
+
+        if game_over == 0:
+            blob_group.update()
+
+        blob_group.draw(screen)
+        lava_group.draw(screen)
+
+        # Update player and check game status
+        game_over = player.update(game_over)
+
+        # If player dies, show the restart button
+        if game_over == -1:
+            if restart_button.draw():
+                player.reset(50, screen_height - tile_size * 2)
+                game_over = 0
+
+    # Update display
     pygame.display.update()
 
+# Quit pygame
 pygame.quit()
